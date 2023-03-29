@@ -1,7 +1,7 @@
 from autograder_problem_4_1 import Autograder_4_1
 from autograder_problem_4_2 import Autograder_4_2
 from autograder_problem_4_3 import Autograder_4_3
-# from autograder_problem_4_4 import Autograder_4_4
+from autograder_problem_4_4 import Autograder_4_4
 
 # Colors
 W = '\033[0m'  # white (normal)
@@ -35,12 +35,12 @@ def main():
     total3 = str(len(res3[0].columns))
     correct3 = str(int(res3[0].sum(axis=1)[0]))
 
-    # # Grade Problem 4
-    # print(f"{G}Autograding for Project 4 Problem 4:\n{W}")
-    # p4 = Autograder_4_4()
-    # res4 = p4.autograde()
-    # total4 = str(len(res4[0].columns))
-    # correct4 = str(int(res4[0].sum(axis=1)[0]))
+    # Grade Problem 4
+    print(f"{G}Autograding for Project 4 Problem 4:\n{W}")
+    p4 = Autograder_4_4()
+    res4 = p4.autograde()
+    total4 = str(len(res4[0].columns))
+    correct4 = str(int(res4[0].sum(axis=1)[0]))
   
     # Print results
     print(f"{Y}\n Problem 1 Final Grades:{W}")
@@ -58,15 +58,13 @@ def main():
     res3[0].to_csv("P4_3_grades.csv")
     res3[1].to_csv("P4_3_times.csv")
 
-    # print(f"{Y}\n Problem 4 Final Grades:{W}")
-    # print(res4[0])
-    # res4[0].to_csv("P4_4_grades.csv")
-    # res4[1].to_csv("P4_4_times.csv")
+    print(f"{Y}\n Problem 4 Final Grades:{W}")
+    print(res4[0])
+    res4[0].to_csv("P4_4_grades.csv")
+    res4[1].to_csv("P4_4_times.csv")
 
-    # correct = correct2 + correct3 + correct4
-    correct = correct2 + correct3
-    # total = total1 + total2 + total3 + total4 
-    total = total1 + total2 + total3
+    correct = correct2 + correct3 + correct4
+    total = total2 + total3 + total4 
     print(f"{R}\n --> {correct}/{total} problems correct\n{W}")
 
     return

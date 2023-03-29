@@ -26,7 +26,6 @@
 #define TARGET  20
 
 // functions used
-unsigned int generate_hash(unsigned int nonce, unsigned int index, unsigned int* transactions, unsigned int n_transactions);
 void read_file(char* file, unsigned int* transactions, unsigned int n_transactions);
 void err_check(cudaError_t ret, char* msg, int exit_code);
 
@@ -95,14 +94,38 @@ int main(int argc, char* argv[]) {
 
     // ------ Step 2: Generate the hash values ------ //
 
-    // TODO Problem 1: perform this hash generation in the GPU
-    // Hint: You need both nonces and transactions to compute a hash.
+    // Allocate the hash device memory
+    unsigned int* device_hash_array;
+    cuda_ret = cudaMalloc((void**)&device_hash_array, trials * sizeof(unsigned int));
+    err_check(cuda_ret, (char*)"Unable to allocate hashes to device memory!", 1);
+    unsigned int* device_transactions;
+    cuda_ret = cudaMalloc((void**)&device_transactions, n_transactions * sizeof(unsigned int));
+    err_check(cuda_ret, (char*)"Unable to allocate transactions to device memory!", 1);
+    cuda_ret = cudaMemcpy(device_transactions, transactions, n_transactions * sizeof(unsigned int), cudaMemcpyHostToDevice);
+    err_check(cuda_ret, (char*)"Unable to copy transactions from host memory to device memory!", 3);
+
+    // Launch the hash kernel
+    hash_kernel <<< dimGrid, dimBlock >>> (
+        device_hash_array,  // put hashes into here
+        device_nonce_array, // nonce values
+        trials,             // size of array
+        device_transactions,// transactions made
+        n_transactions,     // number of transactions
+        MAX                 // to mod with
+        );
+    cuda_ret = cudaDeviceSynchronize();
+    err_check(cuda_ret, (char*)"Unable to launch hash kernel!", 2);
+
+    // Get nonces from device memory
     unsigned int* hash_array = (unsigned int*)calloc(trials, sizeof(unsigned int));
-    for (int i = 0; i < trials; ++i)
-        hash_array[i] = generate_hash(nonce_array[i], i, transactions, n_transactions);
+    cuda_ret = cudaMemcpy(hash_array, device_hash_array, trials * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    err_check(cuda_ret, (char*)"Unable to read hash from device memory!", 3);
 
     // Free memory
     free(transactions);
+    cudaFree(device_nonce_array);
+    cudaFree(device_hash_array);
+    cudaFree(device_transactions);
 
 
     // ------ Step 3: Find the nonce with the minimum hash value ------ //
@@ -150,21 +173,6 @@ int main(int argc, char* argv[]) {
 
     return 0;
 } // End Main -------------------------------------------- //
-
-
-
-/* Generate Hash ----------------------------------------- //
-*   Generates a hash value from a nonce and transaction list.
-*/
-unsigned int generate_hash(unsigned int nonce, unsigned int index, unsigned int* transactions, unsigned int n_transactions) {
-
-    unsigned int hash = (nonce + transactions[0] * (index + 1)) % MAX;
-    for (int j = 1; j < n_transactions; j++) {
-        hash = (hash + transactions[j] * (index + 1)) % MAX;
-    }
-    return hash;
-
-} // End Generate Hash ---------- //
 
 
 

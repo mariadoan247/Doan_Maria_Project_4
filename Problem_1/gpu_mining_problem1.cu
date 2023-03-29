@@ -91,9 +91,6 @@ int main(int argc, char* argv[]) {
     cuda_ret = cudaMemcpy(nonce_array, device_nonce_array, trials * sizeof(unsigned int), cudaMemcpyDeviceToHost);
     err_check(cuda_ret, (char*)"Unable to read nonce from device memory!", 3);
 
-    // Free memory
-    cudaFree(device_nonce_array);
-
 
     // ------ Step 2: Generate the hash values ------ //
 
@@ -101,13 +98,18 @@ int main(int argc, char* argv[]) {
     unsigned int* device_hash_array;
     cuda_ret = cudaMalloc((void**)&device_hash_array, trials * sizeof(unsigned int));
     err_check(cuda_ret, (char*)"Unable to allocate hashes to device memory!", 1);
+    unsigned int* device_transactions;
+    cuda_ret = cudaMalloc((void**)&device_transactions, n_transactions * sizeof(unsigned int));
+    err_check(cuda_ret, (char*)"Unable to allocate transactions to device memory!", 1);
+    cuda_ret = cudaMemcpy(device_transactions, transactions, n_transactions * sizeof(unsigned int), cudaMemcpyHostToDevice);
+    err_check(cuda_ret, (char*)"Unable to copy transactions from host memory to device memory!", 3);
 
     // Launch the hash kernel
     hash_kernel <<< dimGrid, dimBlock >>> (
         device_hash_array,  // put hashes into here
-        nonce_array,        // nonce values
+        device_nonce_array, // nonce values
         trials,             // size of array
-        transactions,       // transactions made
+        device_transactions,// transactions made
         n_transactions,     // number of transactions
         MAX                 // to mod with
         );
@@ -121,7 +123,9 @@ int main(int argc, char* argv[]) {
 
     // Free memory
     free(transactions);
+    cudaFree(device_nonce_array);
     cudaFree(device_hash_array);
+    cudaFree(device_transactions);
 
 
     // ------ Step 3: Find the nonce with the minimum hash value ------ //
