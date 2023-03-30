@@ -4,16 +4,16 @@ all: make_serial
 # ------------------------------------------------------------------------------- #
 
 # input file and size
-FILE     = "/home/doan0016/test_data/Problem_1_and_2/debug_1k.csv"
-SIZE	 = 1000
+FILE     = "/home/doan0016/test_data/Problem_1_and_2/in_20k.csv"
+SIZE	 = 20000
 
 # number of trials to run
-TRIALS_A = 5000
-TRIALS_B = 10000
+TRIALS_A = 5000000
+TRIALS_B = 10000000
 
 # output file suffix
-OUT_A    = 1k_5k
-OUT_B    = 1k_10k
+OUT_A    = 20k_5m
+OUT_B    = 20k_10m
 
 
 run:
