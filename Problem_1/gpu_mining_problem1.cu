@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
     cuda_ret = cudaDeviceSynchronize();
     err_check(cuda_ret, (char*)"Unable to launch hash kernel!", 2);
 
-    // Get nonces from device memory
+    // Get hashes from device memory
     unsigned int* hash_array = (unsigned int*)calloc(trials, sizeof(unsigned int));
     cuda_ret = cudaMemcpy(hash_array, device_hash_array, trials * sizeof(unsigned int), cudaMemcpyDeviceToHost);
     err_check(cuda_ret, (char*)"Unable to read hash from device memory!", 3);
