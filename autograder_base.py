@@ -71,7 +71,7 @@ class Base_Autograder(ABC):
                 return [scores, times]
 
             # run and analyze the problem
-            for i in range(0, n):
+            for i in range(n):
 
                 print(f"{G}Testing for {commands[i][0]}'s output: {t_res[i]}{W}")
 
@@ -202,9 +202,9 @@ class Base_Autograder(ABC):
                         print(f"{R}The expected output: {t_output[i]} does not match the result!{W}")
 
                 try:
-                    t = np.genfromtxt(os.path.join(student_dir, commands[i][-2]), delimiter=',')
+                    t = np.genfromtxt(os.path.join(student_dir, commands[i][-1]), delimiter=',')
                 except Exception as err:
-                    print(f"{R}Error finding program's time file: {commands[i][-2]}{W}")
+                    print(f"{R}Error finding program's time file: {commands[i][-1]}{W}")
                     continue
                 times[i] = t
 

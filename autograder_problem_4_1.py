@@ -143,13 +143,13 @@ class Autograder_4_1(Base_Autograder):
                 params[4],  # Whether to let the differences have an error range
             )
 
-        # Set results
-        test_results[file] = result[0]
-        time_results[file] = result[1]
+            # Set results
+            test_results[file] = result[0]
+            time_results[file] = result[1]
 
-        # Add each result to the dataframes
-        grade.loc[self.student_name, columns[file]] = test_results[file][0]
-        time.loc[self.student_name, columns[file]]  = time_results[file][0]
+            # Add each result to the dataframes
+            grade.loc[self.student_name, columns[file]] = test_results[file][0]
+            time.loc[self.student_name, columns[file]]  = time_results[file][0]
         
         return [grade, time]
     
