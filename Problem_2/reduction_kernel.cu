@@ -1,37 +1,40 @@
 
-// To generate hash value
-__device__
-unsigned int generate_hash(unsigned int nonce, unsigned int index, unsigned int* transactions, unsigned int n_transactions, unsigned int MAX);
+#define BLOCK_SIZE 1024
 
-
-/* Hash Kernel --------------------------------------
-*       Generates an array of hash values from nonces.
+/* Reduction Kernel --------------------------------------
+*       Finds the local nonce values with the minimum hash values
 */
 __global__
-void hash_kernel(unsigned int* hash_array, unsigned int* nonce_array, unsigned int array_size, unsigned int* transactions, unsigned int n_transactions, unsigned int mod) {
+void reduction_kernel(unsigned int* hash_array, unsigned int* nonce_array, unsigned int array_size, unsigned int* min_hash_array, unsigned int* min_nonce_array, unsigned int MAX) {
 
     // Calculate thread index
-    unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned int index = 2 * blockDim.x * blockIdx.x + threadIdx.x;
 
-    // Generate hash values
+    __shared__ unsigned int hash_reduction[BLOCK_SIZE];
+    __shared__ unsigned int nonce_reduction[BLOCK_SIZE];
+    // Find local mins
     if (index < array_size) {
-        hash_array[index] = generate_hash(nonce_array[index], index, transactions, n_transactions, mod);
+        hash_reduction[threadIdx.x] = hash_array[index];
+        nonce_reduction[threadIdx.x] = nonce_array[index];
+    } else {
+        hash_reduction[threadIdx.x] = MAX;
+        nonce_reduction[threadIdx.x] = MAX;
+    }
+    if ((index + BLOCK_SIZE) < array_size && hash_reduction[threadIdx.x] > hash_array[index + BLOCK_SIZE]) {
+        hash_reduction[threadIdx.x] = hash_array[index + BLOCK_SIZE];
+        nonce_reduction[threadIdx.x] = nonce_array[index + BLOCK_SIZE];
+    }
+    for (int stride = BLOCK_SIZE/2; stride >= 1; stride = stride/2) {
+        __syncthreads();
+        if (threadIdx.x < stride && hash_reduction[threadIdx.x] > hash_reduction[threadIdx.x + stride]) {
+            hash_reduction[threadIdx.x] = hash_reduction[threadIdx.x + stride];
+            nonce_reduction[threadIdx.x] = nonce_reduction[threadIdx.x + stride];
+        }
     }
 
-} // End Hash Kernel //
-
-
-
-/* Generate Hash ----------------------------------------- //
-*   Generates a hash value from a nonce and transaction list.
-*/
-__device__
-unsigned int generate_hash(unsigned int nonce, unsigned int index, unsigned int* transactions, unsigned int n_transactions, unsigned int MAX) {
-
-    unsigned int hash = (nonce + transactions[0] * (index + 1)) % MAX;
-    for (int j = 1; j < n_transactions; j++) {
-        hash = (hash + transactions[j] * (index + 1)) % MAX;
+    if(threadIdx.x == 0) {
+        min_hash_array[blockIdx.x] = hash_reduction[0];
+        min_nonce_array[blockIdx.x] = nonce_reduction[0];
     }
-    return hash;
 
-} // End Generate Hash ---------- //
+} // End Reduction Kernel //
