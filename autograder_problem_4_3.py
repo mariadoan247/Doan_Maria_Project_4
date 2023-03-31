@@ -19,7 +19,10 @@ G = '\033[32m'  # green
 class Autograder_4_3(Base_Autograder):
 
     def __init__(self):
-        self.student_name = "Maria"
+        super().__init__()
+
+        # Student informations
+        self.student_name = "Maria Doan"
         self.is_grad = False
 
         # Directory information
